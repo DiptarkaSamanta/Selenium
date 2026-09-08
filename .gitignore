@@ -3,6 +3,9 @@
 venv/
 ENV/
 
+# Temporary and task backup folders
+tasks/
+
 # IDE files
 .idea/
 .vscode/
