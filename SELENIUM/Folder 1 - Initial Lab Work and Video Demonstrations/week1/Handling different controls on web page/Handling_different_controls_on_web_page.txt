@@ -1,0 +1,86 @@
+====================================================================
+Selenium WebDriver - Handling Different Controls on Web Page
+====================================================================
+
+1. Overview
+--------------------------------------------------------------------
+In web automation testing, interacting with various HTML UI controls 
+(Text inputs, Radio buttons, Checkboxes, Dropdowns, Buttons, and Alerts) 
+is a fundamental requirement. Selenium WebDriver provides dedicated 
+methods and helper classes (e.g., `Select`, `ActionChains`, `Alert`) to 
+interact with these web controls efficiently.
+
+
+2. Handling Text Boxes / Input Fields
+--------------------------------------------------------------------
+- Enter text: `element.send_keys("text_value")`
+- Clear existing text: `element.clear()`
+- Fetch entered value: `element.get_attribute("value")`
+
+Example:
+  username = driver.find_element(By.ID, "username")
+  username.clear()
+  username.send_keys("Diptarka")
+
+
+3. Handling Radio Buttons & Checkboxes
+--------------------------------------------------------------------
+- Click element: `element.click()`
+- Check selection status: `element.is_selected()` (returns True/False)
+- Check display status: `element.is_displayed()`
+- Check enable status: `element.is_enabled()`
+
+Example:
+  radio_btn = driver.find_element(By.XPATH, "//input[@value='radio1']")
+  if not radio_btn.is_selected():
+      radio_btn.click()
+
+  checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
+  for cb in checkboxes:
+      if not cb.is_selected():
+          cb.click()
+
+
+4. Handling Dropdowns (Select Class)
+--------------------------------------------------------------------
+For HTML `<select>` elements, use Selenium's `Select` class:
+
+Import:
+  from selenium.webdriver.support.select import Select
+
+Usage:
+  dropdown = driver.find_element(By.ID, "dropdown-class-example")
+  select = Select(dropdown)
+
+  # Select by visible text
+  select.select_by_visible_text("Option1")
+
+  # Select by value attribute
+  select.select_by_value("option2")
+
+  # Select by index (0-based)
+  select.select_by_index(1)
+
+
+5. Handling Alerts & Popups
+--------------------------------------------------------------------
+For JavaScript native alerts (`alert()`, `confirm()`, `prompt()`):
+
+Switch to Alert:
+  alert = driver.switch_to.alert
+
+Actions:
+  print(alert.text)      # Read alert text
+  alert.accept()          # Click OK / Accept
+  alert.dismiss()         # Click Cancel / Dismiss
+  alert.send_keys("text") # Enter text in prompt alert
+
+
+6. Handling Dynamic Autocomplete / Suggestion Lists
+--------------------------------------------------------------------
+Send keys to input field, wait for suggestion list, then select matching item:
+
+Example:
+  driver.find_element(By.ID, "autocomplete").send_keys("Germany")
+  time.sleep(2)
+  driver.find_element(By.XPATH, "//li[text()='Germany']").click()
