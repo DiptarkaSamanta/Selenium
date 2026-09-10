@@ -4,6 +4,6 @@ This folder contains initial lab exercises, module-wise assignments, practice sc
 
 ## Modules & Structure
 
-- **Module 1**: Fundamental concepts, setup instructions, and theory.
-- **Lab Scripts**: Automated Python scripts created during classes and lab assignments.
-- **Demonstration Videos**: Video recordings and demonstration links for completed lab work.
+*   **Modules**: Fundamental concepts, setup instructions, and theory.
+*   **Lab Scripts**: Automated Python scripts created during classes and lab assignments.
+*   **Demonstration Videos**: Video recordings and demonstration links for completed lab work.
