@@ -1,86 +1,158 @@
-====================================================================
-Selenium WebDriver - Handling Different Controls on Web Page
-====================================================================
+================================================================================
+    SELENIUM WEBDRIVER - HANDLING DIFFERENT CONTROLS ON WEB PAGE
+================================================================================
 
-1. Overview
---------------------------------------------------------------------
-In web automation testing, interacting with various HTML UI controls 
-(Text inputs, Radio buttons, Checkboxes, Dropdowns, Buttons, and Alerts) 
-is a fundamental requirement. Selenium WebDriver provides dedicated 
-methods and helper classes (e.g., `Select`, `ActionChains`, `Alert`) to 
-interact with these web controls efficiently.
+--------------------------------------------------------------------------------
+1. XPATH & DIFFERENCE BETWEEN ABSOLUTE AND RELATIVE XPATH
+--------------------------------------------------------------------------------
+XPath (XML Path Language) is used to locate elements on a web page by navigating 
+through the HTML DOM structure.
 
+A. ABSOLUTE XPATH:
+   • Defines the complete path to the element starting from the root <html> node.
+   • Uses a single forward slash ( / ) for direct child navigation.
+   • Syntax: /html/body/div[1]/div[2]/form/input[1]
+   • Disadvantages: Extremely fragile. Any minor change in the web page structure 
+     breaks the XPath.
 
-2. Handling Text Boxes / Input Fields
---------------------------------------------------------------------
-- Enter text: `element.send_keys("text_value")`
-- Clear existing text: `element.clear()`
-- Fetch entered value: `element.get_attribute("value")`
+B. RELATIVE XPATH:
+   • Starts from anywhere within the HTML document without starting from root.
+   • Uses double forward slash ( // ).
+   • Syntax: //tagname[@attribute='value']
+   • Example: //input[@id='username'] or //button[@class='btn-primary']
+   • Advantages: Highly robust, flexible, and resilient to UI structural changes.
 
-Example:
-  username = driver.find_element(By.ID, "username")
-  username.clear()
-  username.send_keys("Diptarka")
-
-
-3. Handling Radio Buttons & Checkboxes
---------------------------------------------------------------------
-- Click element: `element.click()`
-- Check selection status: `element.is_selected()` (returns True/False)
-- Check display status: `element.is_displayed()`
-- Check enable status: `element.is_enabled()`
-
-Example:
-  radio_btn = driver.find_element(By.XPATH, "//input[@value='radio1']")
-  if not radio_btn.is_selected():
-      radio_btn.click()
-
-  checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
-  for cb in checkboxes:
-      if not cb.is_selected():
-          cb.click()
+C. KEY DIFFERENCES:
+   -----------------------------------------------------------------------------
+   Feature                  Absolute XPath            Relative XPath
+   -----------------------------------------------------------------------------
+   Prefix                   Single slash ( / )        Double slash ( // )
+   Start Node               Root <html> tag           Any matching node in DOM
+   Fragility                High (Breaks easily)      Low (Stable & Maintainable)
+   Industry Practice        Not Recommended           Recommended Standard
+   -----------------------------------------------------------------------------
 
 
-4. Handling Dropdowns (Select Class)
---------------------------------------------------------------------
-For HTML `<select>` elements, use Selenium's `Select` class:
+--------------------------------------------------------------------------------
+2. XPATH USING CONTAINS, STARTS-WITH, PARENT AND SIBLING NODES
+--------------------------------------------------------------------------------
+When element attributes are dynamic (e.g., id="user_12345"), dynamic XPath functions 
+and axes navigation are required.
 
-Import:
-  from selenium.webdriver.support.select import Select
+A. CONTAINS KEYWORD:
+   Used when an attribute value or text contains a specific substring.
+   • By Attribute: //input[contains(@id, 'user_')]
+   • By Text:      //button[contains(text(), 'Submit')]
 
-Usage:
-  dropdown = driver.find_element(By.ID, "dropdown-class-example")
-  select = Select(dropdown)
+B. STARTS-WITH KEYWORD:
+   Used when an attribute value or text starts with a specific string.
+   • Syntax: //input[starts-with(@name, 'btn')]
 
-  # Select by visible text
-  select.select_by_visible_text("Option1")
+C. PARENT & SIBLING AXES NAVIGATION:
+   • Parent Node (Navigates to direct parent element):
+     Syntax: //input[@id='username']/parent::div  OR  //input[@id='username']/..
 
-  # Select by value attribute
-  select.select_by_value("option2")
+   • Ancestor Node (Navigates to any ancestor element):
+     Syntax: //input[@id='username']/ancestor::form
 
-  # Select by index (0-based)
-  select.select_by_index(1)
+   • Following-Sibling (Navigates to sibling elements after current node):
+     Syntax: //label[text()='Email']/following-sibling::input
 
-
-5. Handling Alerts & Popups
---------------------------------------------------------------------
-For JavaScript native alerts (`alert()`, `confirm()`, `prompt()`):
-
-Switch to Alert:
-  alert = driver.switch_to.alert
-
-Actions:
-  print(alert.text)      # Read alert text
-  alert.accept()          # Click OK / Accept
-  alert.dismiss()         # Click Cancel / Dismiss
-  alert.send_keys("text") # Enter text in prompt alert
+   • Preceding-Sibling (Navigates to sibling elements before current node):
+     Syntax: //input[@id='email']/preceding-sibling::label
 
 
-6. Handling Dynamic Autocomplete / Suggestion Lists
---------------------------------------------------------------------
-Send keys to input field, wait for suggestion list, then select matching item:
+--------------------------------------------------------------------------------
+3. HANDLING BUTTON
+--------------------------------------------------------------------------------
+Buttons are interactive web controls clicked to perform actions or submissions.
 
-Example:
-  driver.find_element(By.ID, "autocomplete").send_keys("Germany")
-  time.sleep(2)
-  driver.find_element(By.XPATH, "//li[text()='Germany']").click()
+A. COMMON OPERATIONS:
+   • Click Button:           button.click()
+   • Check Visibility:       button.is_displayed()
+   • Check Enabled State:    button.is_enabled()
+   • Get Button Label/Text:  button.text OR button.get_attribute("value")
+
+B. CODE EXAMPLE:
+   btn = driver.find_element(By.XPATH, "//button[@id='submit-btn']")
+   if btn.is_displayed() and btn.is_enabled():
+       print("Button Text:", btn.text)
+       btn.click()
+
+
+--------------------------------------------------------------------------------
+4. HANDLING INPUT BOX
+--------------------------------------------------------------------------------
+Input boxes (<input type="text">, <input type="password">, <textarea>) store user text.
+
+A. COMMON OPERATIONS:
+   • Type Text:              input_box.send_keys("text_to_enter")
+   • Clear Existing Text:    input_box.clear()
+   • Fetch Entered Value:    input_box.get_attribute("value")
+
+B. CODE EXAMPLE:
+   username = driver.find_element(By.XPATH, "//input[@id='username']")
+   username.clear()
+   username.send_keys("Diptarka Samanta")
+   print("Entered Value:", username.get_attribute("value"))
+
+
+--------------------------------------------------------------------------------
+5. HANDLING CHECKBOX
+--------------------------------------------------------------------------------
+Checkboxes allow users to select single or multiple options from a group.
+
+A. COMMON OPERATIONS:
+   • Select / Toggle:        checkbox.click()
+   • Check Selection State:  checkbox.is_selected()  (Returns True/False)
+
+B. CODE EXAMPLE (Selecting all unselected checkboxes):
+   checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
+   for cb in checkboxes:
+       if not cb.is_selected():
+           cb.click()
+       print("Checkbox Selected:", cb.is_selected())
+
+
+--------------------------------------------------------------------------------
+6. HANDLING RADIO BUTTON
+--------------------------------------------------------------------------------
+Radio buttons allow selecting only one option from a mutually exclusive group.
+
+A. COMMON OPERATIONS:
+   • Select Radio Option:    radio.click()
+   • Check Selection State:  radio.is_selected()  (Returns True/False)
+
+B. CODE EXAMPLE:
+   radio1 = driver.find_element(By.XPATH, "//input[@value='radio1']")
+   if not radio1.is_selected():
+       radio1.click()
+   print("Radio 1 Selected:", radio1.is_selected())
+
+
+--------------------------------------------------------------------------------
+7. HANDLING SELECT BOX (DROPDOWN)
+--------------------------------------------------------------------------------
+Static HTML dropdowns constructed using <select> and <option> tags are handled 
+using Selenium's built-in `Select` class.
+
+A. IMPORT REQUIREMENT:
+   from selenium.webdriver.support.select import Select
+
+B. SELECTION METHODS:
+   1. By Visible Text:   select_obj.select_by_visible_text("Option 1")
+   2. By Value Attribute: select_obj.select_by_value("option1")
+   3. By Index (0-based): select_obj.select_by_index(0)
+
+C. UTILITY METHODS:
+   • Get All Options:          options = select_obj.options
+   • Get First Selected Option: selected_text = select_obj.first_selected_option.text
+
+D. CODE EXAMPLE:
+   dropdown_elem = driver.find_element(By.ID, "dropdown-class-example")
+   select = Select(dropdown_elem)
+   
+   # Select Option 2
+   select.select_by_visible_text("Option2")
+   print("Selected Option:", select.first_selected_option.text)
+================================================================================

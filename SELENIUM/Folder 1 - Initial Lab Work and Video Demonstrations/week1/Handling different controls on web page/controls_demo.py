@@ -10,59 +10,95 @@ driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())
 driver.implicitly_wait(10)
 
 try:
-    # Open Practice Page
+    # Open Practice Website
     driver.get("https://rahulshettyacademy.com/AutomationPractice/")
     driver.maximize_window()
     time.sleep(2)
 
-    # 1. Radio Button Handling
-    print("--- 1. Radio Buttons ---")
-    radio_button = driver.find_element(By.XPATH, "//input[@value='radio1']")
-    radio_button.click()
-    print("Radio Button 1 Selected:", radio_button.is_selected())
+    print("=================================================================")
+    print("DEMO: HANDLING DIFFERENT CONTROLS ON WEB PAGE")
+    print("=================================================================")
+
+    # ------------------------------------------------------------------
+    # 1. Absolute vs Relative XPath & 2. Contains, Starts-With, Axes
+    # ------------------------------------------------------------------
+    print("\n--- 1 & 2. Advanced XPath Locators ---")
+    
+    # Relative XPath with contains()
+    header = driver.find_element(By.XPATH, "//h1[contains(text(), 'Practice Page')]")
+    print("Relative XPath Header Text:", header.text)
+
+    # Relative XPath with starts-with()
+    radio1_btn = driver.find_element(By.XPATH, "//input[starts-with(@value, 'radio1')]")
+    print("Found Radio 1 using starts-with XPath")
+
+    # Parent Axis
+    radio_parent_div = radio1_btn.find_element(By.XPATH, "./parent::fieldset")
+    print("Found Parent Fieldset Legend:", radio_parent_div.find_element(By.TAG_NAME, "legend").text)
+
+    # Following-Sibling Axis
+    checkbox_label = driver.find_element(By.XPATH, "//input[@id='checkBoxOption1']/following-sibling::text()[1] | //label[@for='bmw']")
+
+    # ------------------------------------------------------------------
+    # 3. Handling Button
+    # ------------------------------------------------------------------
+    print("\n--- 3. Handling Button ---")
+    open_window_btn = driver.find_element(By.XPATH, "//button[@id='openwindow']")
+    print("Button Text:", open_window_btn.text)
+    print("Is Button Displayed:", open_window_btn.is_displayed())
+    print("Is Button Enabled:", open_window_btn.is_enabled())
+
+    # ------------------------------------------------------------------
+    # 4. Handling Input Box
+    # ------------------------------------------------------------------
+    print("\n--- 4. Handling Input Box ---")
+    name_input = driver.find_element(By.XPATH, "//input[@id='name']")
+    name_input.clear()
+    name_input.send_keys("Diptarka Samanta")
+    print("Input Box Entered Value:", name_input.get_attribute("value"))
+
+    # ------------------------------------------------------------------
+    # 5. Handling Checkbox
+    # ------------------------------------------------------------------
+    print("\n--- 5. Handling Checkbox ---")
+    checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
+    print(f"Total Checkboxes found: {len(checkboxes)}")
+    for index, cb in enumerate(checkboxes, start=1):
+        if not cb.is_selected():
+            cb.click()
+            print(f"  Checkbox {index} checked -> is_selected: {cb.is_selected()}")
     time.sleep(1)
 
-    # 2. Static Dropdown (Select Class)
-    print("\n--- 2. Dropdown Selection ---")
+    # ------------------------------------------------------------------
+    # 6. Handling Radio Button
+    # ------------------------------------------------------------------
+    print("\n--- 6. Handling Radio Button ---")
+    radio2 = driver.find_element(By.XPATH, "//input[@value='radio2']")
+    if not radio2.is_selected():
+        radio2.click()
+    print("Radio Option 2 selected -> is_selected:", radio2.is_selected())
+    time.sleep(1)
+
+    # ------------------------------------------------------------------
+    # 7. Handling Select Box (Dropdown)
+    # ------------------------------------------------------------------
+    print("\n--- 7. Handling Select Box ---")
     dropdown_element = driver.find_element(By.ID, "dropdown-class-example")
     select = Select(dropdown_element)
-    select.select_by_visible_text("Option2")
-    print("Selected Option 2 via Select class")
-    time.sleep(1)
 
-    # 3. Checkboxes Handling
-    print("\n--- 3. Checkboxes ---")
-    checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
-    for index, checkbox in enumerate(checkboxes, start=1):
-        if not checkbox.is_selected():
-            checkbox.click()
-            print(f"Checkbox {index} checked")
-    time.sleep(1)
+    # Select by Visible Text
+    select.select_by_visible_text("Option3")
+    print("Selected Option by Visible Text:", select.first_selected_option.text)
 
-    # 4. Dynamic Auto-Suggest Dropdown
-    print("\n--- 4. Auto-Suggest Input ---")
-    autocomplete_input = driver.find_element(By.ID, "autocomplete")
-    autocomplete_input.send_keys("Germany")
-    time.sleep(2)
-    driver.find_element(By.XPATH, "//li[text()='Germany']").click()
-    print("Selected 'Germany' from auto-suggest dropdown")
-    time.sleep(1)
+    # Select by Value Attribute
+    select.select_by_value("option1")
+    print("Selected Option by Value Attribute:", select.first_selected_option.text)
 
-    # 5. Alert / Popup Handling
-    print("\n--- 5. Web Alert Handling ---")
-    name_box = driver.find_element(By.ID, "name")
-    name_box.send_keys("Diptarka")
-    
-    alert_btn = driver.find_element(By.ID, "alertbtn")
-    alert_btn.click()
-    
-    alert_popup = driver.switch_to.alert
-    print("Alert Message Received:", alert_popup.text)
-    time.sleep(2)
-    alert_popup.accept()
-    print("Alert Accepted successfully")
+    # Select by Index
+    select.select_by_index(2)
+    print("Selected Option by Index 2:", select.first_selected_option.text)
 
 finally:
     time.sleep(2)
     driver.quit()
-    print("\nBrowser closed successfully.")
+    print("\nDemo Completed & Browser Closed.")
