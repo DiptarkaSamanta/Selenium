@@ -1,0 +1,164 @@
+================================================================================
+                    PART 2: SCRIPT RUNNING OPTIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. ROBOT VS. PYBOT
+--------------------------------------------------------------------------------
+A. Historical Overview:
+- `pybot`: A legacy command-line script used in older versions of Robot Framework 
+  (prior to version 3.1) to run tests specifically using Python 2 environment.
+- `jybot`: Used to run tests using Jython (Java virtual machine).
+- `ipybot`: Used to run tests using IronPython (.NET framework).
+
+B. Modern Standardization (`robot` command):
+- Starting from Robot Framework 3.1+, `pybot`, `jybot`, and `ipybot` scripts were 
+  DEPRECATED and officially REMOVED in Robot Framework 4.0+.
+- All executions are now unified under the single `robot` executable entry point.
+
+Comparison Table:
++-------------------+-----------------------------------+-----------------------------------+
+| Feature           | Legacy `pybot` Command            | Modern `robot` Command            |
++-------------------+-----------------------------------+-----------------------------------+
+| Status            | Deprecated / Removed              | Official Standard (Active)        |
+| Python Version    | Python 2.x                        | Python 3.x                        |
+| Execution Command | `pybot test.robot`                | `robot test.robot`                |
+| Entry Point       | Custom wrapper script             | `python -m robot`                 |
++-------------------+-----------------------------------+-----------------------------------+
+
+
+--------------------------------------------------------------------------------
+2. RUNNING FROM PYCHARM, COMMAND WINDOW, BATCH FILE, TASK SCHEDULER
+--------------------------------------------------------------------------------
+A. Running from PyCharm:
+1. Install PyCharm plugin: **Robot Framework Language Server** or **Hyper RobotFramework Support**.
+2. Configure External Tool in PyCharm:
+   - Name: `Robot Run`
+   - Program: `C:\Python311\Scripts\robot.exe` (or path to venv `robot.exe`)
+   - Arguments: `-d results $FilePath$`
+   - Working Directory: `$ProjectFileDir$`
+3. Right-click any `.robot` file -> External Tools -> Robot Run.
+
+B. Running from Command Window / Terminal:
+```cmd
+rem Run single suite file
+robot -d results tests/login_tests.robot
+
+rem Run entire folder containing suites
+robot -d results tests/
+```
+
+C. Running via Windows Batch File (`run_tests.bat`):
+```bat
+@echo off
+echo Starting Robot Framework Test Execution...
+cd /d "D:\projects\selenium_assignment\Selenium"
+call .venv\Scripts\activate.bat
+robot -d results --loglevel INFO "Folder 1 - Initial Lab Work and Video Demonstrations\week4\Introduction\intro_test.robot"
+echo Execution Complete! HTML report generated in results/ directory.
+pause
+```
+
+D. Running via Windows Task Scheduler (Automated Unattended Scheduling):
+1. Open Windows Task Scheduler (`taskschd.msc`).
+2. Action -> Create Basic Task -> Name: `Nightly Robot Test Suite`.
+3. Trigger -> Select Daily at 02:00 AM.
+4. Action -> Start a Program.
+   - Program/script: `cmd.exe`
+   - Add arguments: `/c "D:\projects\selenium_assignment\run_tests.bat"`
+   - Start in: `D:\projects\selenium_assignment\`
+
+
+--------------------------------------------------------------------------------
+3. RUNNING ON SAUCELABS.COM BROWSERS
+--------------------------------------------------------------------------------
+SauceLabs is a cloud platform allowing automated browser testing across thousands of 
+real browser, OS, and device combinations.
+
+A. Setting up SauceLabs Remote Execution in Robot Framework:
+To route Selenium execution to SauceLabs grid, specify the SauceLabs Remote URL 
+and desired capabilities (browserName, platformName, browserVersion).
+
+```robot
+*** Settings ***
+Library    SeleniumLibrary
+
+*** Variables ***
+${SAUCE_USERNAME}      your_saucelabs_username
+${SAUCE_ACCESS_KEY}    your_saucelabs_access_key
+${REMOTE_URL}          https://${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}@ondemand.us-west-1.saucelabs.com:443/wd/hub
+
+*** Test Cases ***
+SauceLabs Cloud Test
+    ${desired_capabilities}=    Create Dictionary
+    ...    browserName=Chrome
+    ...    platformName=Windows 11
+    ...    browserVersion=latest
+    ...    sauce:options=${DESIRED_CAPS_SAUCE}
+    
+    Open Browser    https://example.com    remote_url=${REMOTE_URL}    desired_capabilities=${desired_capabilities}
+    Page Should Contain    Example Domain
+    Close Browser
+```
+
+
+--------------------------------------------------------------------------------
+4. RUNNING & SCHEDULING FROM JENKINS
+--------------------------------------------------------------------------------
+Jenkins is a leading Continuous Integration / Continuous Deployment (CI/CD) server.
+
+A. Setting up Robot Framework Job in Jenkins:
+1. Install **Robot Framework Plugin** in Jenkins (Manage Jenkins -> Plugins).
+2. Create New Item -> Select **Freestyle project** -> Name: `Robot_Automation_CI`.
+3. Build Steps -> Add build step -> **Execute Windows batch command**:
+   ```cmd
+   python -m robot --outputdir %WORKSPACE%\reports tests/
+   ```
+4. Post-build Actions -> Add post-build action -> **Publish Robot Framework test results**:
+   - Directory where Robot results are located: `reports`
+   - Pass threshold (%): `90`
+   - Unstable threshold (%): `80`
+
+B. Scheduling Automated Builds (Cron Trigger):
+Under **Build Triggers** -> Check **Build periodically**:
+- `H 2 * * *` (Runs daily at 2:00 AM)
+- `H/15 * * * *` (Runs every 15 minutes)
+
+
+--------------------------------------------------------------------------------
+5. RUNNING SINGLE TEST CASE, MULTIPLE SUITES & ADVANCED RUN OPTIONS
+--------------------------------------------------------------------------------
+A. Running Single Test Case:
+Use `-t` or `--test` flag:
+```bash
+robot -t "Valid Login Test" login_tests.robot
+```
+
+B. Running Multiple Suites:
+```bash
+robot tests/suite1.robot tests/suite2.robot
+```
+
+C. Tag Filtering (`-i` / `-e`):
+- Include tags (`-i` / `--include`): `robot -i smoke tests/`
+- Exclude tags (`-e` / `--exclude`): `robot -e slow tests/`
+- Combined boolean tag logic: `robot -i "smoke AND web" tests/`
+
+D. Re-running Failed Tests (`--rerunfailed`):
+1. Execute full test suite:
+   ```bash
+   robot -d results/first_run tests/
+   ```
+2. Re-run only the tests that failed in the previous run:
+   ```bash
+   robot --rerunfailed results/first_run/output.xml -d results/second_run tests/
+   ```
+3. Merge results using `rebot`:
+   ```bash
+   rebot --merge results/first_run/output.xml results/second_run/output.xml
+   ```
+
+E. Overriding Variables from Command Line (`-v` / `--variable`):
+```bash
+robot -v BROWSER:firefox -v URL:https://staging.example.com tests/
+```

@@ -1,0 +1,181 @@
+================================================================================
+                           PART 1: PYTHON BASICS & API OVERVIEW
+================================================================================
+
+--------------------------------------------------------------------------------
+1. REST vs SOAP
+--------------------------------------------------------------------------------
+Web services allow applications to communicate over networks using standard protocols. 
+The two most dominant web service architectural styles/protocols are REST 
+(Representational State Transfer) and SOAP (Simple Object Access Protocol).
+
+A. Conceptual Overview:
+1. REST (Representational State Transfer):
+   - An architectural style (not a protocol) based on standard HTTP principles.
+   - Resource-centric: Every resource (e.g., user, product, order) is identified by a 
+     unique URI (Uniform Resource Identifier).
+   - Uses standard HTTP methods: GET, POST, PUT, PATCH, DELETE.
+   - Flexible payload formats: JSON, XML, HTML, Plain Text (JSON is industry standard).
+   - Lightweight, scalable, and ideal for mobile devices and web frontends.
+
+2. SOAP (Simple Object Access Protocol):
+   - A strict, standardized protocol defining message format and transmission rules.
+   - Function/Operation-centric: Requests call specific remote procedures or functions.
+   - Uses strict XML for message formatting embedded within SOAP Envelopes.
+   - Relies on WSDL (Web Services Description Language) documents to define the API contract.
+   - Built-in enterprise security (WS-Security) and transactional compliance (ACID).
+
+B. Comparison Matrix:
+
++----------------------+---------------------------------+---------------------------------+
+| Feature              | REST (Architectural Style)      | SOAP (Strict Protocol)          |
++----------------------+---------------------------------+---------------------------------+
+| Protocol / Style     | Architectural Style             | Protocol                        |
+| Data Format          | JSON, XML, Text, HTML           | XML only                        |
+| Contract             | Optional (OpenAPI / Swagger)    | Mandatory (WSDL document)       |
+| Performance          | Lightweight, faster, low RAM    | Heavyweight, larger XML size    |
+| Transport Protocol   | HTTP / HTTPS                    | HTTP, SMTP, JMS, TCP            |
+| State Management     | Stateless                       | Stateless or Stateful           |
+| Security Standards   | HTTPS / SSL, OAuth 2.0, JWT     | WS-Security, SSL, Enterprise DB |
+| Acid Compliance      | Depends on backend handling     | Native ACID compliance support  |
+| Caching              | Native HTTP Caching supported   | Cannot be cached easily         |
++----------------------+---------------------------------+---------------------------------+
+
+C. Python Code Comparison:
+
+1. REST Request in Python (using `requests`):
+```python
+import requests
+
+# REST API Call returning JSON
+response = requests.get("https://api.example.com/v1/users/101")
+if response.status_code == 200:
+    user_data = response.json()
+    print(f"User Name: {user_data['name']}")
+```
+
+2. SOAP Request in Python (using `zeep` or raw XML payload via `requests`):
+```python
+import requests
+
+# SOAP Envelope Payload
+soap_xml_payload = """<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <GetUserDetail xmlns="http://tempuri.org/">
+      <UserId>101</UserId>
+    </GetUserDetail>
+  </soap:Body>
+</soap:Envelope>"""
+
+headers = {
+    "Content-Type": "text/xml; charset=utf-8",
+    "SOAPAction": "http://tempuri.org/GetUserDetail"
+}
+
+response = requests.post("https://api.example.com/SoapService.asmx", data=soap_xml_payload, headers=headers)
+print("SOAP Response XML:", response.text)
+```
+
+
+--------------------------------------------------------------------------------
+2. PYTHON REQUEST LIBRARY
+--------------------------------------------------------------------------------
+The `requests` library is the standard HTTP library for Python. It abstracts the 
+complexities of making raw HTTP requests behind a simple, elegant Pythonic API.
+
+Key Features of `requests`:
+1. Human-Readable API: Simple syntax (`requests.get()`, `requests.post()`).
+2. Automatic JSON Decoding: Built-in `.json()` method converts HTTP JSON responses directly to Python dictionaries/lists.
+3. Session Objects & Connection Pooling: Reuses underlying TCP connections to improve request execution speed.
+4. SSL Verification: Enforces SSL certificate checks by default.
+5. Cookie Persistence: Automatically retains and passes cookies across session requests.
+6. Authentication Helpers: Native support for Basic, Digest, and OAuth authentication.
+
+Installing `requests`:
+```bash
+pip install requests
+```
+
+Basic Example:
+```python
+import requests
+
+# HTTP GET Request
+res = requests.get("https://jsonplaceholder.typicode.com/posts/1")
+
+print("Status Code:", res.status_code)        # e.g., 200
+print("Content-Type:", res.headers['Content-Type'])
+print("Title:", res.json()['title'])
+```
+
+
+--------------------------------------------------------------------------------
+3. PYTHON, BEHAVE SETUP
+--------------------------------------------------------------------------------
+`behave` is the official Behavior-Driven Development (BDD) testing framework for Python. 
+It allows team members (QA, developers, business analysts) to write test specifications 
+in plain, human-readable Gherkin syntax (`Given-When-Then`).
+
+A. Installation:
+```bash
+pip install behave requests
+```
+
+B. Standard Directory Layout for `behave`:
+```text
+my_api_project/
+├── features/
+│   ├── environment.py           # Hooks (before_all, after_scenario, etc.)
+│   ├── user_api.feature         # Gherkin Feature file
+│   └── steps/
+│       └── user_steps.py        # Step definitions mapping Gherkin to Python
+```
+
+C. Sample Feature File (`features/user_api.feature`):
+```gherkin
+Feature: User API Operations
+
+  Scenario: Successfully fetch user details
+    Given the API base endpoint is "https://reqres.in/api"
+    When I send a GET request to "/users/2"
+    Then the response status code should be 200
+    And the user first name should be "Janet"
+```
+
+D. Sample Step Definitions (`features/steps/user_steps.py`):
+```python
+from behave import given, when, then
+import requests
+
+@given('the API base endpoint is "{base_url}"')
+def step_impl_base_url(context, base_url):
+    context.base_url = base_url
+
+@when('I send a GET request to "{endpoint}"')
+def step_impl_get_request(context, endpoint):
+    url = context.base_url + endpoint
+    context.response = requests.get(url)
+
+@then('the response status code should be {status_code:d}')
+def step_impl_status_code(context, status_code):
+    assert context.response.status_code == status_code, f"Expected {status_code}, got {context.response.status_code}"
+
+@then('the user first name should be "{expected_name}"')
+def step_impl_first_name(context, expected_name):
+    data = context.response.json()
+    actual_name = data['data']['first_name']
+    assert actual_name == expected_name, f"Expected {expected_name}, got {actual_name}"
+```
+
+E. Running Behave:
+```bash
+# Run all features
+behave
+
+# Run with tag filter
+behave --tags=@smoke
+
+# Generate detailed text report
+behave -f plain
+```

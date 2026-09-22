@@ -1,0 +1,250 @@
+================================================================================
+               PART 3: MAKE THE SCRIPT MORE READABLE
+================================================================================
+
+--------------------------------------------------------------------------------
+1. PROCEDURAL VS. GHERKIN
+--------------------------------------------------------------------------------
+Robot Framework supports two distinct styles for authoring test cases:
+
+A. Procedural Style (Action-oriented / Command sequence):
+Lists exact action steps sequentially. Good for low-level technical scripts.
+
+```robot
+*** Test Cases ***
+Login Test Procedural
+    Open Browser    https://example.com/login    chrome
+    Input Text      id=username    admin
+    Input Password  id=password    secret
+    Click Button    id=submit
+    Page Should Contain    Dashboard
+    Close Browser
+```
+
+B. Gherkin BDD Style (Behavior-oriented / Business language):
+Uses human-understandable prefixes (`Given`, `When`, `Then`, `And`, `But`). Robot Framework 
+automatically strips Gherkin prefixes when matching keyword definitions!
+
+```robot
+*** Test Cases ***
+Login Test Gherkin
+    Given user navigates to login page
+    When user inputs credentials "admin" and "secret"
+    And user clicks submit button
+    Then dashboard page should be displayed
+```
+
+Comparison Table:
++------------------------+-----------------------------------+-----------------------------------+
+| Feature                | Procedural Style                  | Gherkin BDD Style                 |
++------------------------+-----------------------------------+-----------------------------------+
+| Target Audience        | Technical Automation Engineers    | Business Analysts, QAs, Product   |
+| Readability            | Action/Element focused            | Intent/Behavior focused           |
+| Keyword Prefix         | None                              | Given, When, Then, And, But       |
+| Maintenance            | High duplication if locators change| Low maintenance via Keyword abstractions|
++------------------------+-----------------------------------+-----------------------------------+
+
+
+--------------------------------------------------------------------------------
+2. INTRODUCING USER-DEFINED KEYWORDS
+--------------------------------------------------------------------------------
+User-Defined Keywords allow custom keyword creation by encapsulating lower-level 
+library keywords into reusable functions under the `*** Keywords ***` section.
+
+Arguments & Return Values Syntax:
+- Arguments: Set using `[Arguments]` setting.
+- Return Values: Set using `[Return]` or `RETURN` statement.
+
+Example:
+```robot
+*** Keywords ***
+Calculate Total Price
+    [Arguments]    ${price}    ${quantity}
+    ${total}=    Evaluate    ${price} * ${quantity}
+    RETURN    ${total}
+```
+
+
+--------------------------------------------------------------------------------
+3. BREAK THE SCRIPT INTO KEYWORDS
+--------------------------------------------------------------------------------
+Refactoring a monolithic test case into modular user keywords improves maintainability:
+
+Before Refactoring (Monolithic):
+```robot
+*** Test Cases ***
+Search Test
+    Open Browser    https://google.com    chrome
+    Input Text    name=q    Robot Framework
+    Click Element    name=btnK
+    Page Should Contain    Robot Framework
+    Close Browser
+```
+
+After Refactoring (Modular Keywords):
+```robot
+*** Test Cases ***
+Search Test Refactored
+    Navigate To Search Engine
+    Perform Search Query    Robot Framework
+    Verify Search Results    Robot Framework
+    Close Application
+
+*** Keywords ***
+Navigate To Search Engine
+    Open Browser    https://google.com    chrome
+
+Perform Search Query
+    [Arguments]    ${term}
+    Input Text    name=q    ${term}
+    Press Keys    name=q    RETURN
+
+Verify Search Results
+    [Arguments]    ${expected_text}
+    Page Should Contain    ${expected_text}
+
+Close Application
+    Close Browser
+```
+
+
+--------------------------------------------------------------------------------
+4. MOVING KEYWORDS TO RESOURCE FILES
+--------------------------------------------------------------------------------
+To share keywords and variables across multiple `.robot` test suites, move keywords into 
+separate `.resource` files.
+
+A. Resource File Syntax (`resources/common.resource`):
+```robot
+*** Settings ***
+Documentation    Shared Common Keywords and Locators.
+Library          SeleniumLibrary
+
+*** Variables ***
+${BROWSER}       chrome
+${LOGIN_URL}     https://example.com/login
+
+*** Keywords ***
+Open Main Portal
+    Open Browser    ${LOGIN_URL}    ${BROWSER}
+    Maximize Browser Window
+```
+
+B. Importing Resource File in Test Suite (`test_login.robot`):
+```robot
+*** Settings ***
+Resource    resources/common.resource
+
+*** Test Cases ***
+Test Main Portal
+    Open Main Portal
+    Close Browser
+```
+
+
+--------------------------------------------------------------------------------
+5. ADDING SET UP AND TEAR DOWN
+--------------------------------------------------------------------------------
+Adding Setup and Teardown at test case and suite levels ensures tests run cleanly 
+without leaving leftover browser instances or dirty application states.
+
+A. Suite Level Setup/Teardown (`*** Settings ***`):
+```robot
+*** Settings ***
+Suite Setup       Initialize Environment
+Suite Teardown    Cleanup Environment
+
+*** Keywords ***
+Initialize Environment
+    Log To Console    Starting Suite Execution...
+
+Cleanup Environment
+    Log To Console    Completed Suite Execution.
+```
+
+B. Test Level Setup/Teardown:
+- Configured globally in `*** Settings ***` via `Test Setup` / `Test Teardown`.
+- Configured per test case inside `[Setup]` / `[Teardown]`.
+
+```robot
+*** Test Cases ***
+Individual Test With Custom Teardown
+    [Setup]       Open Browser To Home Page
+    Do Action Step
+    [Teardown]    Capture Page Screenshot And Close Browser
+
+*** Keywords ***
+Capture Page Screenshot And Close Browser
+    Capture Page Screenshot
+    Close Browser
+```
+
+
+--------------------------------------------------------------------------------
+6. OVERVIEW OF PAGE OBJECTS
+--------------------------------------------------------------------------------
+The Page Object Model (POM) pattern separates page element locators and page actions 
+into independent resource files corresponding to web pages (e.g., `LoginPage.resource`, 
+`DashboardPage.resource`).
+
+Directory Structure for Robot POM Framework:
+```text
+project_root/
+├── pages/
+│   ├── LoginPage.resource
+│   └── DashboardPage.resource
+├── tests/
+│   └── LoginTests.robot
+```
+
+Sample Page Object Resource (`pages/LoginPage.resource`):
+```robot
+*** Settings ***
+Library    SeleniumLibrary
+
+*** Variables ***
+${TXT_USERNAME}    id=txtUsername
+${TXT_PASSWORD}    id=txtPassword
+${BTN_LOGIN}       id=btnLogin
+
+*** Keywords ***
+Enter Username
+    [Arguments]    ${username}
+    Input Text    ${TXT_USERNAME}    ${username}
+
+Enter Password
+    [Arguments]    ${password}
+    Input Password    ${TXT_PASSWORD}    ${password}
+
+Click Login
+    Click Button    ${BTN_LOGIN}
+```
+
+
+--------------------------------------------------------------------------------
+7. INCREASE READABILITY USING GHERKIN
+--------------------------------------------------------------------------------
+Gherkin syntax enhances readability by writing tests as human executable specifications.
+
+Example Gherkin Specification in Robot Framework:
+
+```robot
+*** Settings ***
+Resource    resources/common.resource
+
+*** Test Cases ***
+Successful Customer Search
+    Given the user is logged into customer dashboard
+    When the user searches for customer "John Doe"
+    Then customer details for "John Doe" should be displayed in results table
+
+*** Keywords ***
+The user is logged into customer dashboard
+    Log To Console    Logging into dashboard...
+
+The user searches for customer "${customer_name}"
+    Log To Console    Searching for ${customer_name}...
+
+Customer details for "${customer_name}" should be displayed in results table
+    Log To Console    Verifying ${customer_name} in results table...
+```

@@ -1,0 +1,219 @@
+================================================================================
+                      PART 4: HANDLING HTTP RESPONSES
+================================================================================
+
+--------------------------------------------------------------------------------
+1. UNDERSTANDING RESPONSE OBJECTS
+--------------------------------------------------------------------------------
+When `requests` completes an HTTP execution, it returns a `Response` object containing 
+all metadata and content returned by the server.
+
+Key Attributes & Methods of `requests.Response`:
+- `response.status_code`: Integer HTTP status code (e.g., 200, 404).
+- `response.ok`: Returns `True` if status code is less than 400.
+- `response.text`: Response payload decoded as unicode string.
+- `response.content`: Raw response payload as bytes (`b'...'`).
+- `response.json()`: Parses response content as JSON (raises ValueError if not valid JSON).
+- `response.headers`: Case-insensitive HTTP response headers dictionary.
+- `response.cookies`: `RequestsCookieJar` containing cookies sent by server.
+- `response.url`: Final URL of request (after following redirects).
+- `response.history`: List of prior `Response` objects if redirected.
+- `response.elapsed`: `timedelta` duration between sending request and receiving response.
+- `response.encoding`: Encoding detected/set for `.text` decoding.
+- `response.raise_for_status()`: Raises `HTTPError` if status code is 4xx or 5xx.
+
+
+--------------------------------------------------------------------------------
+2. READING RESPONSE CONTENT
+--------------------------------------------------------------------------------
+A. `.text` vs `.content` vs `.json()`:
+
+1. `response.text`:
+   - Decodes raw response bytes into a string based on HTTP `Content-Type` header encoding or inspection.
+   - Use when reading HTML, plain text, XML, or string representations.
+
+2. `response.content`:
+   - Returns un-decoded raw byte sequence (`bytes`).
+   - Essential for binary files (images, audio, video, PDF documents, zip archives).
+
+3. `response.json()`:
+   - Convenience method that executes `json.loads(response.text)`.
+   - Best for REST API payloads.
+
+
+--------------------------------------------------------------------------------
+3. HANDLING BINARY AND TEXT DATA
+--------------------------------------------------------------------------------
+A. Downloading & Saving Binary File (e.g., PNG Image or PDF):
+```python
+import requests
+
+url = "https://httpbin.org/image/png"
+response = requests.get(url)
+
+if response.status_code == 200:
+    # Save raw bytes to file
+    with open("downloaded_image.png", "wb") as file:
+        file.write(response.content)
+    print("Image saved successfully.")
+```
+
+B. Handling Custom Text Encoding:
+```python
+res = requests.get("https://example.com")
+# Force specific encoding if auto-detection fails
+res.encoding = "utf-8"
+print(res.text)
+```
+
+
+--------------------------------------------------------------------------------
+4. STATUS CODES AND ERROR HANDLING
+--------------------------------------------------------------------------------
+HTTP Status Code Range Reference:
+
+1. 1xx (Informational): Request received, continuing process.
+2. 2xx (Success):
+   - `200 OK`: Standard successful request.
+   - `201 Created`: Resource successfully created (POST).
+   - `202 Accepted`: Request accepted for processing, but not completed yet.
+   - `204 No Content`: Successful request, no content body returned (DELETE/PUT).
+3. 3xx (Redirection):
+   - `301 Moved Permanently`: Resource relocated permanently.
+   - `302 Found`: Resource relocated temporarily.
+   - `304 Not Modified`: Cached resource valid.
+4. 4xx (Client Errors):
+   - `400 Bad Request`: Malformed syntax or invalid request payload.
+   - `401 Unauthorized`: Missing or invalid authentication token.
+   - `403 Forbidden`: Authenticated user lacks permission.
+   - `404 Not Found`: Target resource URI does not exist.
+   - `409 Conflict`: Request conflicts with current server state.
+   - `422 Unprocessable Entity`: Validation errors in payload.
+   - `429 Too Many Requests`: Rate limiting threshold exceeded.
+5. 5xx (Server Errors):
+   - `500 Internal Server Error`: Generic server crash or unhandled exception.
+   - `502 Bad Gateway`: Invalid response from upstream server.
+   - `503 Service Unavailable`: Server down for maintenance or overloaded.
+   - `504 Gateway Timeout`: Upstream server timed out.
+
+
+--------------------------------------------------------------------------------
+5. SUCCESS AND ERROR CODES
+--------------------------------------------------------------------------------
+Programmatic validation of status codes:
+
+```python
+import requests
+
+def validate_api_response(response, expected_status=200):
+    if response.status_code != expected_status:
+        raise AssertionError(
+            f"API Error! Expected status {expected_status}, "
+            f"received {response.status_code}. Response Body: {response.text}"
+        )
+    return True
+```
+
+
+--------------------------------------------------------------------------------
+6. EXCEPTION HANDLING IN REQUESTS
+--------------------------------------------------------------------------------
+All custom exceptions raised by `requests` inherit from `requests.exceptions.RequestException`.
+
+Exception Hierarchy Tree:
+```text
+RequestException
+├── ConnectionError
+│   └── SSLError
+├── HTTPError (from raise_for_status)
+├── Timeout
+│   ├── ConnectTimeout
+│   └── ReadTimeout
+└── TooManyRedirects
+```
+
+Robust Exception Handling Implementation:
+```python
+import requests
+from requests.exceptions import RequestException, HTTPError, ConnectionError, Timeout
+
+try:
+    response = requests.get("https://api.example.com/data", timeout=5)
+    response.raise_for_status() # Raises HTTPError for 4xx/5xx
+    data = response.json()
+except ConnectionError as ce:
+    print(f"[ERROR] Network connection failed: {ce}")
+except Timeout as te:
+    print(f"[ERROR] Request timed out: {te}")
+except HTTPError as he:
+    print(f"[ERROR] HTTP status error: {he.response.status_code} - {he.response.text}")
+except RequestException as re:
+    print(f"[ERROR] Fatal Requests error: {re}")
+```
+
+
+--------------------------------------------------------------------------------
+7. ADVANCED RESPONSE HANDLING
+--------------------------------------------------------------------------------
+A. Tracking Redirect History:
+```python
+res = requests.get("http://github.com") # Redirects HTTP -> HTTPS
+print("Final URL:", res.url)
+print("Redirect History:")
+for history_item in res.history:
+    print(f"  {history_item.status_code} -> {history_item.url}")
+```
+
+B. Measuring Request Latency / Performance SLA:
+```python
+res = requests.get("https://httpbin.org/delay/1")
+response_time_sec = res.elapsed.total_seconds()
+print(f"Request Latency: {response_time_sec:.3f} seconds")
+
+# SLA Assertion: API response must complete within 2.0 seconds
+assert response_time_sec < 2.0, f"SLA Breach! Latency was {response_time_sec}s"
+```
+
+
+--------------------------------------------------------------------------------
+8. STREAMING LARGE RESPONSES
+--------------------------------------------------------------------------------
+When fetching large files or continuous data streams, loading the entire payload into memory 
+at once (`response.content`) can cause memory spikes or crashes. `stream=True` allows 
+chunked downloading.
+
+```python
+import requests
+
+url = "https://httpbin.org/stream-bytes/102400" # 100KB stream data
+
+with requests.get(url, stream=True) as response:
+    response.raise_for_status()
+    with open("large_output.bin", "wb") as f:
+        # Iterate over response in 10KB chunks
+        for chunk in response.iter_content(chunk_size=10240):
+            if chunk:  # Filter out keep-alive new chunks
+                f.write(chunk)
+print("Stream download complete.")
+```
+
+
+--------------------------------------------------------------------------------
+9. HANDLING COOKIES AND SESSIONS
+--------------------------------------------------------------------------------
+```python
+import requests
+
+# Creating Session object
+session = requests.Session()
+
+# 1. Set explicit cookies on session
+session.cookies.set("auth_token", "secret_token_val", domain="httpbin.org")
+
+# 2. Make request (Cookie is sent automatically)
+res = session.get("https://httpbin.org/cookies")
+print("Cookies sent to server:", res.json()["cookies"])
+
+# 3. Clear session cookies
+session.cookies.clear()
+```

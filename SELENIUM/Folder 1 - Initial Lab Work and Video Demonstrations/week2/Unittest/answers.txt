@@ -1,0 +1,280 @@
+================================================================================
+                           PART 1: UNITTEST FRAMEWORK
+================================================================================
+
+--------------------------------------------------------------------------------
+1. UNITTEST INTRODUCTION
+--------------------------------------------------------------------------------
+The `unittest` module is Python's standard built-in testing framework, originally 
+inspired by Java's JUnit. It provides a rich set of tools for constructing and 
+running test suites, automating tests, sharing setup and shutdown code for tests, 
+aggregating tests into collections, and isolating tests from the reporting framework.
+
+Key Concepts of Unittest:
+1. Test Fixture:
+   - The preparation needed to perform one or more tests, and any associate 
+     cleanup actions. This may involve creating temporary databases, starting a 
+     browser session, or initializing objects.
+2. Test Case:
+   - The individual unit of testing. It checks for a specific response to a 
+     particular set of inputs. `unittest` provides a base class, `TestCase`, 
+     which is used to create new test cases.
+3. Test Suite:
+   - A collection of test cases, test suites, or both. It is used to aggregate 
+     tests that should be executed together.
+4. Test Runner:
+   - A component which orchestrates the execution of tests and provides the 
+     outcome to the user (e.g., in text console or graphical interface).
+
+Basic Unittest Syntax:
+```python
+import unittest
+
+class SimpleTest(unittest.TestCase):
+    def test_example(self):
+        self.assertEqual(1 + 1, 2)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+
+--------------------------------------------------------------------------------
+2. FIRST TEST CASE
+--------------------------------------------------------------------------------
+To write a test case in `unittest`:
+1. Create a class that inherits from `unittest.TestCase`.
+2. Define test methods within the class. Method names MUST start with `test_` 
+   so the test runner recognizes them as executable tests.
+3. Use assertion methods provided by `TestCase` (e.g., `self.assertEqual`, 
+   `self.assertTrue`) to verify outcomes.
+
+Example: Writing First Selenium WebDriver Test Case with Unittest
+
+```python
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+class FirstSeleniumTest(unittest.TestCase):
+
+    def test_google_search_title(self):
+        # Initialize ChromeDriver instance
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(10)
+        
+        # Navigate to website
+        driver.get("https://www.google.com")
+        
+        # Get page title and verify
+        actual_title = driver.title
+        expected_title = "Google"
+        
+        # Assertion
+        self.assertEqual(actual_title, expected_title, "Page title does not match!")
+        
+        # Close browser
+        driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+Explanation:
+- `unittest.TestCase`: Gives access to assertion methods and fixture hooks.
+- `test_google_search_title`: Test function starting with `test_`.
+- `self.assertEqual`: Compares `actual_title` with `expected_title`. If they match, 
+  the test passes; otherwise, it fails and prints the specified error message.
+
+
+--------------------------------------------------------------------------------
+3. IMPLEMENT CLASS LEVEL SETUP AND TEARDOWN METHODS
+--------------------------------------------------------------------------------
+In testing, setting up environments before tests and cleaning up afterwards is 
+crucial. Unittest provides two levels of fixture methods:
+
+1. Method-Level Fixtures (`setUp` & `tearDown`):
+   - `setUp()`: Runs BEFORE EVERY individual test method in the class.
+   - `tearDown()`: Runs AFTER EVERY individual test method in the class.
+
+2. Class-Level Fixtures (`setUpClass` & `tearDownClass`):
+   - `@classmethod setUpClass(cls)`: Runs ONCE BEFORE ANY test methods in the 
+     class are executed. Useful for expensive operations like opening a browser 
+     session or initializing a database connection.
+   - `@classmethod tearDownClass(cls)`: Runs ONCE AFTER ALL test methods in 
+     the class have completed. Useful for quitting browser sessions or closing 
+     connections.
+
+Example: Implementing Class Level vs Method Level Setup/Teardown
+
+```python
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+class DemoSetupTearDown(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """Runs once before all tests in this class."""
+        print("\n[LOG] Starting Browser Session (setUpClass)...")
+        cls.driver = webdriver.Chrome()
+        cls.driver.maximize_window()
+        cls.driver.implicitly_wait(10)
+
+    def setUp(self):
+        """Runs before each test method."""
+        print("[LOG] Navigating to Home Page (setUp)...")
+        self.driver.get("https://example.com")
+
+    def test_check_title(self):
+        print("[LOG] Running test_check_title...")
+        self.assertIn("Example", self.driver.title)
+
+    def test_check_heading(self):
+        print("[LOG] Running test_check_heading...")
+        heading = self.driver.find_element(By.TAG_NAME, "h1").text
+        self.assertEqual(heading, "Example Domain")
+
+    def tearDown(self):
+        """Runs after each test method."""
+        print("[LOG] Test completed. Clearing cookies (tearDown)...")
+        self.driver.delete_all_cookies()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Runs once after all tests in this class."""
+        print("[LOG] Closing Browser Session (tearDownClass)...")
+        cls.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+
+--------------------------------------------------------------------------------
+4. ASSERT A TEST METHOD
+--------------------------------------------------------------------------------
+Assertions are check statements that verify whether a test condition evaluates to True. 
+If an assertion passes, the test execution continues. If an assertion fails, an 
+`AssertionError` exception is raised, marking the test as Failed.
+
+Commonly Used Unittest Assertions:
+
++--------------------------------+-----------------------------------------------+
+| Assertion Method               | Purpose / Condition Checked                   |
++--------------------------------+-----------------------------------------------+
+| self.assertEqual(a, b)         | Verifies a == b                               |
+| self.assertNotEqual(a, b)      | Verifies a != b                               |
+| self.assertTrue(expr)          | Verifies bool(expr) is True                   |
+| self.assertFalse(expr)         | Verifies bool(expr) is False                  |
+| self.assertIn(member, container)| Verifies member in container                 |
+| self.assertNotIn(a, b)         | Verifies a not in b                           |
+| self.assertIsNone(obj)         | Verifies obj is None                          |
+| self.assertIsNotNone(obj)      | Verifies obj is not None                      |
++--------------------------------+-----------------------------------------------+
+
+Example Usage in Selenium Automation:
+
+```python
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+class AssertionsDemo(unittest.TestCase):
+
+    def setUp(self):
+        self.driver = webdriver.Chrome()
+        self.driver.get("https://example.com")
+
+    def test_page_elements(self):
+        driver = self.driver
+        
+        # 1. assertEqual
+        page_title = driver.title
+        self.assertEqual(page_title, "Example Domain", "Title mismatch!")
+
+        # 2. assertIn
+        current_url = driver.current_url
+        self.assertIn("example.com", current_url, "URL substring missing!")
+
+        # 3. assertTrue
+        heading_element = driver.find_element(By.TAG_NAME, "h1")
+        self.assertTrue(heading_element.is_displayed(), "Heading is not visible!")
+
+        # 4. assertIsNotNone
+        link_element = driver.find_element(By.LINK_TEXT, "More information...")
+        self.assertIsNotNone(link_element, "Link element should exist!")
+
+    def tearDown(self):
+        self.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+
+--------------------------------------------------------------------------------
+5. CREATE A TEST SUITE
+--------------------------------------------------------------------------------
+A Test Suite is a collection or grouping of multiple test cases or test classes. 
+In large automation projects, tests are categorized into different suites such as 
+Smoke Tests, Regression Tests, and Sanity Tests.
+
+Ways to create and execute Test Suites in `unittest`:
+
+Method 1: Manual Test Suite Creation using `unittest.TestSuite()`
+
+```python
+import unittest
+# Assuming test_login.py and test_dashboard.py exist
+# from test_cases import TestLogin, TestDashboard
+
+class TestLogin(unittest.TestCase):
+    def test_valid_login(self):
+        self.assertTrue(True)
+
+class TestDashboard(unittest.TestCase):
+    def test_widget_display(self):
+        self.assertTrue(True)
+
+def smoke_test_suite():
+    suite = unittest.TestSuite()
+    
+    # Add individual test methods
+    suite.addTest(TestLogin('test_valid_login'))
+    suite.addTest(TestDashboard('test_widget_display'))
+    
+    # Or add entire TestCase classes
+    # suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestLogin))
+    
+    return suite
+
+if __name__ == "__main__":
+    runner = unittest.TextTestRunner(verbosity=2)
+    my_suite = smoke_test_suite()
+    runner.run(my_suite)
+```
+
+Method 2: Automatic Test Discovery using `TestLoader().discover()`
+
+```python
+import unittest
+
+def run_all_tests():
+    # Discover all tests in current directory matching pattern 'test_*.py'
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir='.', pattern='test_*.py')
+    
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+
+if __name__ == "__main__":
+    run_all_tests()
+```
+
+Summary:
+- `unittest.TestSuite()` groups test cases together.
+- `addTest()` adds specific tests.
+- `discover()` scans directories for matching files.
+- `TextTestRunner()` executes the suite and outputs results to stdout.

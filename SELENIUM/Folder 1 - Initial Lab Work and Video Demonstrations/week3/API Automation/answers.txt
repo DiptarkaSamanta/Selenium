@@ -1,0 +1,277 @@
+================================================================================
+                           PART 3: API AUTOMATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. SETTING GLOBAL CONFIGURATIONS USING PYTHON CONFIG OBJECT
+--------------------------------------------------------------------------------
+Centralizing configuration parameters (Base URL, Timeout, Credentials, Environment) 
+avoids hardcoding values inside test scripts and allows easy environment switching 
+(Dev, QA, Staging, Prod).
+
+A. Config File Format (`config.ini`):
+```ini
+[DEFAULT]
+environment = QA
+timeout = 30
+
+[QA]
+base_url = https://qa-api.example.com
+db_host = localhost
+db_port = 3306
+
+[PROD]
+base_url = https://api.example.com
+db_host = prod-db.example.com
+db_port = 3306
+```
+
+B. Reading Configuration using `configparser`:
+```python
+import configparser
+import os
+
+class ConfigReader:
+    def __init__(self, config_file="config.ini"):
+        self.config = configparser.ConfigParser()
+        self.config.read(config_file)
+        self.env = self.config.get("DEFAULT", "environment")
+
+    def get_base_url(self):
+        return self.config.get(self.env, "base_url")
+
+    def get_timeout(self):
+        return self.config.getint("DEFAULT", "timeout")
+
+# Global Config Singleton Object
+config = ConfigReader()
+BASE_URL = config.get_base_url()
+TIMEOUT = config.get_timeout()
+```
+
+
+--------------------------------------------------------------------------------
+2. OPTIMIZING RESOURCES AND PAYLOAD FROM EXTERNALLY AS REUSABLE DATA
+--------------------------------------------------------------------------------
+Separating payload definitions from test execution logic makes test suites modular 
+and maintainable. Payloads are externalized into JSON template files.
+
+A. External Payload JSON (`templates/user_payload.json`):
+```json
+{
+  "name": "${NAME}",
+  "job": "${JOB}",
+  "email": "${EMAIL}"
+}
+```
+
+B. Payload Helper using `string.Template`:
+```python
+import json
+from string import Template
+
+def get_user_payload(name, job, email):
+    with open("templates/user_payload.json", "r") as f:
+        template_content = f.read()
+    
+    template = Template(template_content)
+    substituted_str = template.substitute(NAME=name, JOB=job, EMAIL=email)
+    return json.loads(substituted_str)
+
+# Usage in test
+payload = get_user_payload("Alice Smith", "Automation Lead", "alice@example.com")
+```
+
+
+--------------------------------------------------------------------------------
+3. AUTHENTICATING API'S USING PYTHON AUTOMATION AUTH METHOD - EXAMPLE
+--------------------------------------------------------------------------------
+API authentication restricts unauthorized access. `requests` natively supports multiple 
+auth schemes:
+
+A. HTTP Basic Authentication (`requests.auth.HTTPBasicAuth`):
+```python
+import requests
+from requests.auth import HTTPBasicAuth
+
+res = requests.get("https://httpbin.org/basic-auth/user/passwd", 
+                   auth=HTTPBasicAuth("user", "passwd"))
+assert res.status_code == 200
+```
+
+B. Bearer Token Authentication (Authorization Header):
+```python
+token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+headers = {"Authorization": f"Bearer {token}"}
+
+res = requests.get("https://api.example.com/protected", headers=headers)
+```
+
+C. API Key Authentication (Header or Query Param):
+```python
+# Via Header
+headers = {"X-API-KEY": "secret_api_key_12345"}
+res = requests.get("https://api.example.com/data", headers=headers)
+
+# Via Query Parameter
+params = {"api_key": "secret_api_key_12345"}
+res = requests.get("https://api.example.com/data", params=params)
+```
+
+
+--------------------------------------------------------------------------------
+4. IMPORTANCE OF SESSION MANAGING IN API AUTOMATION
+--------------------------------------------------------------------------------
+`requests.Session()` maintains state across HTTP requests.
+
+Key Advantages:
+1. TCP Connection Pooling: Reuses opened TCP sockets, reducing TCP handshake latency.
+2. Default Configuration Persistence: Automatically attaches default headers, cookies, 
+   and auth parameters to all requests made through the session object.
+3. Performance Boost: Benchmark tests show up to 3x-4x speed improvements over 
+   individual `requests.get()` calls when making sequential API requests.
+
+Example Session Usage:
+```python
+import requests
+
+session = requests.Session()
+# Set persistent session configurations
+session.headers.update({"Authorization": "Bearer token_xyz", "Accept": "application/json"})
+session.auth = ("admin", "password123")
+
+# All subsequent calls automatically carry headers and auth
+res1 = session.get("https://api.example.com/profile")
+res2 = session.get("https://api.example.com/settings")
+
+session.close() # Clean up session resources
+```
+
+
+--------------------------------------------------------------------------------
+5. SEND AND MANAGE COOKIES FOR API REQUEST CALLS
+--------------------------------------------------------------------------------
+Cookies can be passed individually or managed via a cookie jar.
+
+A. Passing Custom Cookies:
+```python
+custom_cookies = {"session_id": "abc123xyz", "user_locale": "en_US"}
+res = requests.get("https://httpbin.org/cookies", cookies=custom_cookies)
+```
+
+B. Extracting & Reusing Response Cookies:
+```python
+login_res = requests.post("https://example.com/login", data={"user": "admin"})
+
+# Extract cookies from response
+session_cookie = login_res.cookies.get("session_id")
+
+# Reuse cookie in subsequent request
+res = requests.get("https://example.com/dashboard", cookies=login_res.cookies)
+```
+
+
+--------------------------------------------------------------------------------
+6. SETTING UP MYSQL INSTANCE TO DRIVE DATA FROM PYTHON CODE
+--------------------------------------------------------------------------------
+In data-driven API automation, test inputs and expected outputs are fetched from a 
+MySQL database, and API execution results are validated directly against database tables.
+
+Prerequisites & Drivers:
+```bash
+pip install mysql-connector-python
+```
+
+
+--------------------------------------------------------------------------------
+7. SETUP DATABASE WITH EXAMPLE TABLE DATA AND START CONNECTION
+--------------------------------------------------------------------------------
+A. Python Database Connection Helper:
+```python
+import mysql.connector
+
+def connect_database():
+    connection = mysql.connector.connect(
+        host="localhost",
+        port=3306,
+        user="root",
+        password="password123",
+        database="api_testing_db"
+    )
+    return connection
+
+def execute_query(query):
+    conn = connect_database()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query)
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return results
+```
+
+B. Verifying DB State after API Action:
+```python
+# API call creates user email = 'john@example.com'
+res = requests.post("https://api.example.com/users", json={"email": "john@example.com"})
+
+# Database assertion check
+db_rows = execute_query("SELECT * FROM users WHERE email='john@example.com'")
+assert len(db_rows) == 1, "User record was not persisted to MySQL DB!"
+assert db_rows[0]["status"] == "ACTIVE"
+```
+
+
+--------------------------------------------------------------------------------
+8. PUT, PATCH, AND DELETE METHODS
+--------------------------------------------------------------------------------
+1. HTTP PUT:
+   - Completely replaces target resource representation with request body payload.
+   - Idempotent: Executing N identical PUT requests produces identical server state.
+
+2. HTTP PATCH:
+   - Performs a partial update on specific fields of the target resource.
+   - Non-Idempotent (or conditionally idempotent).
+
+3. HTTP DELETE:
+   - Deletes target resource from server.
+   - Idempotent: Subsequent DELETE calls return 404 Not Found or 204 No Content.
+
+
+--------------------------------------------------------------------------------
+9. UPDATING AND DELETING DATA VIA API
+--------------------------------------------------------------------------------
+```python
+import requests
+
+BASE_URL = "https://jsonplaceholder.typicode.com/posts/1"
+
+# 1. PUT Operation (Full Update)
+put_payload = {"id": 1, "title": "Updated Title", "body": "Updated Body", "userId": 1}
+put_res = requests.put(BASE_URL, json=put_payload)
+assert put_res.status_code == 200
+
+# 2. PATCH Operation (Partial Update)
+patch_payload = {"title": "Patched Title Only"}
+patch_res = requests.patch(BASE_URL, json=patch_payload)
+assert patch_res.status_code == 200
+
+# 3. DELETE Operation
+del_res = requests.delete(BASE_URL)
+assert del_res.status_code in [200, 204]
+```
+
+
+--------------------------------------------------------------------------------
+10. DIFFERENCES BETWEEN PUT AND PATCH
+--------------------------------------------------------------------------------
++--------------------------+-----------------------------------+-----------------------------------+
+| Metric                   | HTTP PUT                          | HTTP PATCH                        |
++--------------------------+-----------------------------------+-----------------------------------+
+| Action Scope             | Full Resource Replacement         | Partial Field Update              |
+| Omitted Fields Behavior  | Sets omitted fields to null/default| Leaves omitted fields unchanged   |
+| Idempotency              | Idempotent                        | Generally Non-Idempotent          |
+| Payload Size             | Larger (Complete object required) | Smaller (Only delta fields)       |
+| Use Case                 | Overwriting an entire record      | Modifying single attribute (e.g.  |
+|                          |                                   | updating user password/status)    |
++--------------------------+-----------------------------------+-----------------------------------+
