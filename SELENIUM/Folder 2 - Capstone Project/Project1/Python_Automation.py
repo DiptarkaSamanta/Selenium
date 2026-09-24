@@ -1,156 +1,130 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 import time
 import os
-import traceback
 
-options = webdriver.ChromeOptions()
-options.page_load_strategy = 'eager'
-options.add_argument("--disable-notifications")
-options.add_argument("--disable-popup-blocking")
-options.add_argument("--start-maximized")
-
-driver = webdriver.Chrome(options=options)
-wait = WebDriverWait(driver, 20)
-actions = ActionChains(driver)
-
-def safe_click(by, value):
-    el = wait.until(EC.presence_of_element_located((by, value)))
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
-    time.sleep(0.5)
-    try:
-        driver.execute_script("arguments[0].click();", el)
-    except Exception:
-        el.click()
-    return el
-
-def send_keys_el(by, value, keys):
-    el = wait.until(EC.presence_of_element_located((by, value)))
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
-    time.sleep(0.3)
-    el.clear()
-    el.send_keys(keys)
-    return el
+driver = webdriver.Chrome()
 
 try:
-    print("Navigating to https://automationexercise.com...")
     driver.get("https://automationexercise.com")
-    time.sleep(2)
+    driver.maximize_window()
+    time.sleep(3)
 
     # Step 1: Click Signup / Login
-    print("Step 1: Clicking Signup / Login button...")
-    safe_click(By.XPATH, "//a[normalize-space()='Signup / Login']")
+    signup_login = driver.find_element(By.XPATH, "//a[normalize-space()='Signup / Login']")
+    signup_login.click()
     time.sleep(2)
 
     # Step 2: New User Signup
-    print("Step 2: Entering Name and Email for signup...")
-    send_keys_el(By.XPATH, "//input[@placeholder='Name']", "Dipu4")
-
-    signup_email = f"Dipu_{int(time.time())}@gmail.com"
-    send_keys_el(By.XPATH, "//input[@data-qa='signup-email']", signup_email)
+    name_input = driver.find_element(By.XPATH, "//input[@placeholder='Name']")
+    name_input.send_keys("Dipu")
     time.sleep(1)
 
-    safe_click(By.CSS_SELECTOR, "button[data-qa='signup-button']") 
-    time.sleep(2) 
+    signup_email = f"dipu_{int(time.time())}@gmail.com"
+    email_input = driver.find_element(By.XPATH, "//input[@data-qa='signup-email']")
+    email_input.send_keys(signup_email)
+    time.sleep(1)
+
+    signup_btn = driver.find_element(By.XPATH, "//button[@data-qa='signup-button']")
+    signup_btn.click()
+    time.sleep(2)
 
     # Step 3: Fill Account Information
-    print("Step 3: Filling Account Information...")
-    safe_click(By.ID, "id_gender1")
-    send_keys_el(By.ID, "password", "dipu@123")
+    driver.execute_script("window.scrollBy(0, 220);")
     time.sleep(1)
 
-    day_element = wait.until(EC.presence_of_element_located((By.XPATH, "//select[@id='days']")))
-    Select(day_element).select_by_value("31")
-
-    month_element = wait.until(EC.presence_of_element_located((By.XPATH, "//select[@id='months']")))
-    Select(month_element).select_by_value("10")
-
-    year_element = wait.until(EC.presence_of_element_located((By.XPATH, "//select[@id='years']")))
-    Select(year_element).select_by_value("2004")
+    gender_radio = driver.find_element(By.XPATH, "//input[@id='id_gender1']")
+    gender_radio.click()
     time.sleep(1)
 
-    safe_click(By.XPATH, "//label[@for='newsletter']")
-    safe_click(By.XPATH, "//input[@id='optin']")
+    password_input = driver.find_element(By.XPATH, "//input[@id='password']")
+    password_input.send_keys("Dipu@123")
     time.sleep(1)
 
-    send_keys_el(By.ID, "first_name", "Dipu")
-    send_keys_el(By.ID, "last_name", "Das")
-    send_keys_el(By.XPATH, "//input[@name='company']", "Nvida")
-    send_keys_el(By.ID, "address1", "12, AB block")
-    send_keys_el(By.ID, "address2", "34, CD block")
+    day_select = Select(driver.find_element(By.XPATH, "//select[@id='days']"))
+    day_select.select_by_value("31")
 
-    country_element = wait.until(EC.presence_of_element_located((By.ID, "country")))
-    Select(country_element).select_by_value("India")
+    month_select = Select(driver.find_element(By.XPATH, "//select[@id='months']"))
+    month_select.select_by_value("10")
 
-    send_keys_el(By.ID, "state", "West Bengal")
-    send_keys_el(By.ID, "city", "Asansol")
-    send_keys_el(By.ID, "zipcode", "713301")
-    send_keys_el(By.ID, "mobile_number", "0123456789")
+    year_select = Select(driver.find_element(By.XPATH, "//select[@id='years']"))
+    year_select.select_by_value("2004")
     time.sleep(1)
 
-    print("Creating account...")
-    safe_click(By.CSS_SELECTOR, "button[data-qa='create-account']")
+    driver.execute_script("window.scrollBy(0, 300);")
+    time.sleep(1)
+
+    newsletter_cb = driver.find_element(By.XPATH, "//input[@id='newsletter']")
+    driver.execute_script("arguments[0].click();", newsletter_cb)
+
+    optin_cb = driver.find_element(By.XPATH, "//input[@id='optin']")
+    driver.execute_script("arguments[0].click();", optin_cb)
+    time.sleep(1)
+
+    driver.find_element(By.XPATH, "//input[@id='first_name']").send_keys("Dipu")
+    driver.find_element(By.XPATH, "//input[@id='last_name']").send_keys("Das")
+    driver.find_element(By.XPATH, "//input[@id='company']").send_keys("Nvidia")
+    driver.find_element(By.XPATH, "//input[@id='address1']").send_keys("12, AB block")
+    driver.find_element(By.XPATH, "//input[@id='address2']").send_keys("34, CD block")
+
+    country_select = Select(driver.find_element(By.XPATH, "//select[@id='country']"))
+    country_select.select_by_value("India")
+
+    driver.find_element(By.XPATH, "//input[@id='state']").send_keys("West Bengal")
+    driver.find_element(By.XPATH, "//input[@id='city']").send_keys("Asansol")
+    driver.find_element(By.XPATH, "//input[@id='zipcode']").send_keys("713301")
+    driver.find_element(By.XPATH, "//input[@id='mobile_number']").send_keys("0123456789")
+    time.sleep(1)
+
+    create_acc_btn = driver.find_element(By.XPATH, "//button[@data-qa='create-account']")
+    driver.execute_script("arguments[0].click();", create_acc_btn)
     time.sleep(2)
 
-    print("Clicking Continue button after account creation...")
-    try:
-        safe_click(By.CSS_SELECTOR, "a[data-qa='continue-button']")
-        time.sleep(2)
-    except Exception as e:
-        print(f"Continue button note: {e}")
+    continue_btn = driver.find_element(By.XPATH, "//a[@data-qa='continue-button']")
+    driver.execute_script("arguments[0].click();", continue_btn)
+    time.sleep(2)
 
     # Step 4: Search & Select Product
-    print("Step 4: Navigating to Products...")
-    driver.get("https://automationexercise.com/products")
+    products_link = driver.find_element(By.XPATH, "//a[@href='/products']")
+    driver.execute_script("arguments[0].click();", products_link)
     time.sleep(2)
 
-    print("Searching product 'tshirt'...")
-    send_keys_el(By.ID, "search_product", "tshirt")
-    safe_click(By.ID, "submit_search")
+    search_input = driver.find_element(By.XPATH, "//input[@id='search_product']")
+    search_input.send_keys("tshirt")
+    search_btn = driver.find_element(By.XPATH, "//button[@id='submit_search']")
+    search_btn.click()
     time.sleep(2)
 
-    print("Selecting product details...")
-    safe_click(By.CSS_SELECTOR, "a[href='/product_details/2']")
+    view_product = driver.find_element(By.XPATH, "//a[@href='/product_details/2']")
+    driver.execute_script("arguments[0].click();", view_product)
     time.sleep(2)
 
     # Step 5: Update quantity and Add to cart
-    print("Step 5: Updating quantity to 4 and adding to cart...")
-    send_keys_el(By.ID, "quantity", "4")
-    safe_click(By.XPATH, "//button[normalize-space()='Add to cart']")
-    time.sleep(2)
-
-    print("Navigating to Cart...")
-    driver.get("https://automationexercise.com/view_cart")
-    time.sleep(2)
-
-    # Step 6: Proceed to checkout
-    print("Step 6: Proceeding to checkout...")
-    safe_click(By.CSS_SELECTOR, ".btn.btn-default.check_out")
-    time.sleep(2)
-
-    actions.scroll_by_amount(0, 200).perform()
+    quantity_input = driver.find_element(By.XPATH, "//input[@id='quantity']")
+    quantity_input.clear()
+    quantity_input.send_keys("4")
     time.sleep(1)
 
+    add_to_cart = driver.find_element(By.XPATH, "//button[normalize-space()='Add to cart']")
+    add_to_cart.click()
+    time.sleep(2)
+
+    view_cart = driver.find_element(By.XPATH, "//u[normalize-space()='View Cart']")
+    driver.execute_script("arguments[0].click();", view_cart)
+    time.sleep(2)
+
+    # Step 6: Proceed to checkout & Save Screenshot
+    checkout_btn = driver.find_element(By.XPATH, "//a[normalize-space()='Proceed To Checkout']")
+    driver.execute_script("arguments[0].click();", checkout_btn)
+    time.sleep(2)
+
+    driver.execute_script("window.scrollBy(0, 220);")
+    time.sleep(2)
+
     screenshot_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "order_evidence.png")
-    if os.path.exists(screenshot_path):
-        os.remove(screenshot_path)
-
-    driver.get_screenshot_as_file(screenshot_path)
-    print(f"SUCCESS: Screenshot saved successfully at {screenshot_path}")
-
-    actions.scroll_by_amount(0, 200).perform()
-    time.sleep(3)
-
-except Exception as e:
-    print(f"An error occurred during execution: {e}")
-    traceback.print_exc()
+    driver.save_screenshot(screenshot_path)
+    print(f"Screenshot saved successfully at: {screenshot_path}")
 
 finally:
     driver.quit()
-
-
