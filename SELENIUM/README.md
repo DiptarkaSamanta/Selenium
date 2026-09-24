@@ -42,15 +42,14 @@ Selenium/
 ### 📋 Detailed Folder Overview
 
 #### 1️⃣ [Folder 1 - Initial Lab Work and Video Demonstrations](./Folder%201%20-%20Initial%20Lab%20Work%20and%20Video%20Demonstrations)
-Contains weekly module assignments, practical lab scripts, conceptual Q&A documentation (MS Word & Text formats), and demonstration video links covering:
-* **Week 1**: Introduction, Flavors of Selenium (IDE, RC, WebDriver, Grid), Selenium 4 W3C Architecture, Environment Installation & Multi-Browser setup.
+Contains weekly module assignments, practical lab scripts, conceptual Q&A documentation (MS Word & Text formats), and python file demonstration.
 
 #### 2️⃣ [Folder 2 - Capstone Project](./Folder%202%20-%20Capstone%20Project)
-Dedicated to the final end-to-end Capstone Web Automation Projects ([Automation Exercise](https://automationexercise.com) & [TutorialsNinja Demo](https://tutorialsninja.com/demo/)). Includes:
-* Full automation test suite source code ([`Python_Automation.py`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/Python_Automation.py), [`Python_Automation2.py`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/Python_Automation2.py))
-* Detailed execution reports ([`execution_report.md`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/execution_report.md), [`execution_report2.md`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/execution_report2.md))
-* Evidence screenshots ([`order_evidence.png`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/order_evidence.png), [`cart_screenshot.png`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/cart_screenshot.png))
-* 🎥 [TutorialsNinja Demonstration Video on Google Drive](https://drive.google.com/drive/folders/1klwyIyQB7_FPjgkBRubDaGUtmnzWuREI?usp=sharing)
+Dedicated to the final end-to-end Capstone Web Automation Project. Includes:
+* Full automation test suite source code
+* Project report & architectural documentation
+* Test execution logs, HTML reports & screenshots
+* Video demonstration links
 
 #### 3️⃣ [Folder 3 - Certificates](./Folder%203%20-%20Certificates)
 Holds all official course completion certificates earned throughout the program.
