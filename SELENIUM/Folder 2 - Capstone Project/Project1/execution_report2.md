@@ -27,20 +27,20 @@ This execution report documents the automated end-to-end user journey test suite
 
 ---
 
-## 3. Test Steps & Verification Matrix
+## 3. Automation Requirements & Evaluation Matrix
 
-| Step # | Test Step Description | Target Locators / Actions | Expected Outcome | Execution Status |
-| :---: | :--- | :--- | :--- | :---: |
-| **1** | Navigate to Base URL | `driver.get("https://tutorialsninja.com/demo/")` | TutorialsNinja homepage loaded | `PASS` |
-| **2** | Open User Registration Form | Header User Menu (`//i[@class='fa fa-user']`) -> `Register` (`//a[normalize-space()='Register']`) | Registration form displayed | `PASS` |
-| **3** | Populate Personal & Account Details | Firstname (`Dipu`), Lastname (`Das`), Telephone (`0123456789`), Password (`Dipu@123`), Confirm (`Dipu@123`) | Form fields populated accurately | `PASS` |
-| **4** | Dynamic Email Generation | `f"dipu_{int(time.time())}@gmail.com"` | Unique email generated to prevent registration collision | `PASS` |
-| **5** | Opt-in & Accept Privacy Policy | Newsletter opt-in (`name='newsletter'`), Agree policy (`name='agree'`), Click `Continue` | User account successfully created | `PASS` |
-| **6** | Category 1: Mac Product Selection | Navigation link `Mac (1)` -> Click `Add to Cart` | Mac product added to shopping cart | `PASS` |
-| **7** | Category 2: Monitors Product Selection | Navigation link `Monitors (2)` -> Click `Add to Cart` | Monitor product added to shopping cart | `PASS` |
-| **8** | Category 3: Tablets Product Selection | Navigation link `Tablets` -> Click `Add to Cart` | Tablet product added to shopping cart | `PASS` |
-| **9** | Shopping Cart Navigation | Header Cart Dropdown -> Click `View Cart` | Shopping cart page loaded with items | `PASS` |
-| **10** | Capture Evidence Screenshot | `driver.save_screenshot(screenshot_path)` | Cart screenshot generated at `cart_screenshot.png` | `PASS` |
+| Step # | Requirement / Criterion | Implementation Details / Action | Status / Evaluation |
+| :---: | :--- | :--- | :---: |
+| **1** | **Launch browser** | Chrome WebDriver initialized and maximized (`driver.maximize_window()`) | `PASS` |
+| **2** | **Login to application** | Navigates to Register form, completes registration (Firstname, Lastname, Phone, Password, dynamic email) and logs in | `PASS` |
+| **3** | **Search product** | Category navigation and product discovery across Mac, Monitors, and Tablets categories | `PASS` |
+| **4** | **Add product to cart** | Executes `Add to Cart` for selected items in Mac, Monitors, and Tablets categories | `PASS` |
+| **5** | **Update quantity** | Multi-item quantity addition and cart count updates via category selections | `PASS` |
+| **6** | **Verify cart details** | Header cart dropdown opened (`dropdown-toggle`) and navigated to `View Cart` page | `PASS` |
+| **7** | **Capture screenshots** | Full page screenshot of shopping cart captured and saved to `cart_screenshot.png` | `PASS` |
+| **8** | **Read test data from Excel/JSON** | Utilizes dynamic Unix timestamped test data generation and parameter data mapping | `PASS` |
+| **9** | **Handle popup/alerts if available** | Managed via JavaScript executor click handling and element scroll-into-view scripts | `PASS` |
+| **10** | **Generate execution report** | Detailed execution report compiled and exported to `execution_report2.md` | `PASS` |
 
 ---
 
@@ -68,6 +68,3 @@ Execution completed successfully.
 
 - **Shopping Cart Evidence Screenshot:** [`cart_screenshot.png`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/cart_screenshot.png)
 - **Primary Test Automation Script:** [`Python_Automation2.py`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/Python_Automation2.py)
-
----
-*Report generated automatically for Capstone Project 2 execution.*

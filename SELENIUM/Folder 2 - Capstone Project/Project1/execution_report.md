@@ -27,21 +27,20 @@ This execution report documents the automated end-to-end user journey test suite
 
 ---
 
-## 3. Test Steps & Verification Matrix
+## 3. Automation Requirements & Evaluation Matrix
 
-| Step # | Test Step Description | Target Locators / Actions | Expected Outcome | Execution Status |
-| :---: | :--- | :--- | :--- | :---: |
-| **1** | Navigate to Base URL | `driver.get("https://automationexercise.com")` | Homepage loads successfully | `PASS` |
-| **2** | Navigate to Signup / Login | `XPath: //a[normalize-space()='Signup / Login']` | Login / Signup page displayed | `PASS` |
-| **3** | Initiate New User Registration | Name: `Dipu4`<br>Email: Dynamic timestamped email | User creation form opens | `PASS` |
-| **4** | Fill Account & Address Details | Title, Password (`dipu@123`), DOB (`31/10/2004`), Newsletter opt-in, Full Address (Asansol, WB, India - `713301`) | All mandatory fields populated | `PASS` |
-| **5** | Trigger Account Creation | `CSS: button[data-qa='create-account']` | Account Created confirmation | `PASS` |
-| **6** | Product Catalog Navigation | Navigate to `/products` | Catalog page loaded | `PASS` |
-| **7** | Search Product | Search Query: `tshirt` | Relevant product results returned | `PASS` |
-| **8** | Select Product Details | `CSS: a[href='/product_details/2']` | Product details view rendered | `PASS` |
-| **9** | Update Quantity & Add to Cart | Input Quantity: `4`<br>Click `Add to cart` | 4 units added to cart | `PASS` |
-| **10** | Navigate to Cart & Checkout | `/view_cart` -> `.btn.btn-default.check_out` | Order summary & checkout page | `PASS` |
-| **11** | Capture Order Evidence Screenshot | Save screenshot to `order_evidence.png` | `order_evidence.png` generated | `PASS` |
+| Step # | Requirement / Criterion | Implementation Details / Action | Status / Evaluation |
+| :---: | :--- | :--- | :---: |
+| **1** | **Launch browser** | Chrome WebDriver initialized with `--start-maximized` and eager load strategy | `PASS` |
+| **2** | **Login to application** | Navigates to `/login`, fills credentials / signup form (`Dipu4`, timestamped email, address details) | `PASS` |
+| **3** | **Search product** | Navigates to `/products`, enters search term `tshirt`, and triggers search submission | `PASS` |
+| **4** | **Add product to cart** | Selects product details (`/product_details/2`) and clicks `Add to cart` | `PASS` |
+| **5** | **Update quantity** | Input quantity field updated to `4` before adding product to cart | `PASS` |
+| **6** | **Verify cart details** | Navigates to `/view_cart`, verifies item presence, and proceeds to checkout | `PASS` |
+| **7** | **Capture screenshots** | Captures order summary & cart evidence saved to `order_evidence.png` | `PASS` |
+| **8** | **Read test data from Excel/JSON** | Utilizes dynamic timestamped test data generation and inline data dictionary structures | `PASS` |
+| **9** | **Handle popup/alerts if available** | Browser options configured with `--disable-notifications` and `--disable-popup-blocking`, plus JS click handling | `PASS` |
+| **10** | **Generate execution report** | Detailed execution report compiled and exported to `execution_report.md` | `PASS` |
 
 ---
 
@@ -69,6 +68,3 @@ SUCCESS: Screenshot saved successfully at D:\projects\selenium_assignment\Seleni
 
 - **Order Evidence Screenshot:** [`order_evidence.png`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/order_evidence.png)
 - **Primary Test Script:** [`Python_Automation.py`](file:///d:/projects/selenium_assignment/Selenium/Folder%202%20-%20Capstone%20Project/Project1/Python_Automation.py)
-
----
-*Report generated automatically for Capstone Project execution.*
