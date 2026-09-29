@@ -1,0 +1,5 @@
+scenario,email,password,expected_result
+invalid_email,invalid_user_99999@testdomain.com,WrongPass123,failure
+invalid_password,test_valid_user@gmail.com,InvalidPassword99,failure
+empty_credentials,, ,failure
+valid_login,demo_autotest_user@gmail.com,TestPassword123,success

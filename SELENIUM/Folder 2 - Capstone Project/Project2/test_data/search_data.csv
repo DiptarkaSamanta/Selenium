@@ -1,0 +1,5 @@
+scenario,search_keyword,expected_outcome,expected_product_or_msg
+existing_mac,MacBook,found,MacBook
+existing_iphone,iPhone,found,iPhone
+existing_palm,Palm Treo,found,Palm Treo Pro
+non_existing_product,XYZNonExistentItem999,not_found,There is no product that matches the search criteria.
